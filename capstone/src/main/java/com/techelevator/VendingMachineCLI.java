@@ -45,7 +45,7 @@ public class VendingMachineCLI {
 
 		while (true) {
 			String choice = (String) menu.getChoiceFromOptions(MAIN_MENU_OPTIONS);
-			boolean end = false;
+
 
 			if (choice.equals(MAIN_MENU_OPTION_DISPLAY_ITEMS)) {
 				// display vending machine items
@@ -108,8 +108,6 @@ public class VendingMachineCLI {
 
 							// Product Purchase Log
 
-
-
 						}
 
 						} else if (nextChoice.equals(PURCHASE_MENU_OPTION_FINISH_TRANSACTION)) {
@@ -143,7 +141,6 @@ public class VendingMachineCLI {
 						menu.getChoiceFromOptions(MAIN_MENU_OPTIONS);
 
 					} if (choice.equals(MAIN_MENU_OPTION_EXIT)) {
-						end = true;
 					}
 				}
 
