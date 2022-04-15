@@ -9,6 +9,8 @@ import java.math.BigDecimal;
 import java.nio.file.FileAlreadyExistsException;
 import java.sql.Time;
 import java.text.DateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
@@ -70,7 +72,8 @@ public class VendingMachineCLI {
 
 						//Feed money Logs
 						try(FileWriter VendingLogs = new FileWriter("Vending Log.txt")){
-							VendingLogs.write(String.valueOf(java.time.LocalDateTime.now()) + "FEED MONEY:" + moneyFeed + currentBalance);
+							DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-uuuu HH:mm:ss a");
+							VendingLogs.write(String.valueOf(LocalDateTime.now().format(formatter) + " FEED MONEY:" + moneyFeed + currentBalance));
 						}catch(IOException e){
 							System.err.println("File not found");
 						}
@@ -103,13 +106,49 @@ public class VendingMachineCLI {
 							System.out.println("\n" + "Current Balance S" + currentBalance);
 							snacks.get(itemLocation).setStockAmount(snacks.get(itemLocation).getStockAmount() - 1);
 
-							// Product Purchase Log
+
+
 						}
+					} else if (nextChoice.equals(PURCHASE_MENU_OPTION_FINISH_TRANSACTION)) {
+						int exactChange = currentBalance.multiply(new BigDecimal("100")).intValue();
+
+						int quarters = 0;
+						int quarterWorth = 25;
+
+						int dimes = 0;
+						int dimeWorth = 10;
+
+						int nickels = 0;
+						int nickelWorth = 5;
+
+						// calculate amount of coins
+						while (exactChange > 0) {
+							quarters = exactChange / quarterWorth;
+							exactChange -= quarters * quarterWorth;
+
+							dimes = exactChange / dimeWorth;
+							exactChange -= dimes * dimeWorth;
+
+							nickels = exactChange / nickelWorth;
+							exactChange -= nickels * nickelWorth;
+
+							System.out.println("Your change is " + quarters + " Quarters " + dimes + " Dimes " + nickels + " Nickels!");
+						}
+						BigDecimal changeGiven = new BigDecimal(0.00);
+
+						changeGiven = currentBalance.subtract(currentBalance);
+						menu.getChoiceFromOptions(MAIN_MENU_OPTIONS);
+
+
+
+
+					}// Product Purchase Log
+
 					}
 				}
 			}
 		}
-	}
+
 
 	public static void main(String[] args) {
 		Menu menu = new Menu(System.in, System.out);
