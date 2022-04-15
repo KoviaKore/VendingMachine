@@ -4,8 +4,11 @@ import com.techelevator.Products.Goodies;
 import com.techelevator.view.Menu;
 import com.techelevator.Products.VendingItems;
 
-import java.io.File;
+
+import java.io.*;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -27,7 +30,6 @@ public class VendingMachineCLI {
 
 	private Menu menu;
 	private Map<String, VendingItems> snacks;
-	private File receipt;
 	private BigDecimal currentBalance = new BigDecimal("0.00");
 
 
@@ -38,8 +40,12 @@ public class VendingMachineCLI {
 	public void run() {
 		System.out.println(VENDING_MACHINE_STORE_NAME);
 
+
+
+
 		while (true) {
 			String choice = (String) menu.getChoiceFromOptions(MAIN_MENU_OPTIONS);
+			boolean end = false;
 
 			if (choice.equals(MAIN_MENU_OPTION_DISPLAY_ITEMS)) {
 				// display vending machine items
@@ -49,6 +55,7 @@ public class VendingMachineCLI {
 			} else if (choice.equals(MAIN_MENU_OPTION_PURCHASE)) {
 
 				// do purchase
+
 				while(true) {
 					System.out.println("\n" + "Current balance: $" + currentBalance);
 					String nextChoice = (String) menu.getChoiceFromOptions(PURCHASE_MENU_OPTIONS);
@@ -60,10 +67,17 @@ public class VendingMachineCLI {
 						System.out.println("\n" + "Please Insert Money (Bills Only)");
 
 						String dollars = money.nextLine();
-						BigDecimal moneyFeed = new BigDecimal(dollars); // Using big decimal because it's more precise when dealing with money compared to a standard double
+						// Using big decimal because it's more precise when dealing with money compared to a standard double
+						BigDecimal moneyFeed = new BigDecimal(dollars);
 						currentBalance = currentBalance.add(moneyFeed);
 
 						//Feed money Logs
+						try(FileWriter VendingLogs = new FileWriter("Vending Log.txt")) {
+							DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-uuuu HH:mm:ss a");
+							VendingLogs.write(String.valueOf(LocalDateTime.now().format(formatter) + " FEED MONEY:" + moneyFeed + currentBalance));
+						} catch(IOException e) {
+							System.err.println("File not found");
+						}
 
 
 						//Display items to select for purchase
@@ -90,12 +104,49 @@ public class VendingMachineCLI {
 							currentBalance = currentBalance.subtract(snacks.get(itemLocation).getPrice());
 
 							System.out.println(snacks.get(itemLocation).dispenseMessage());
-							System.out.println("\n" + "Current Balance S" + currentBalance);
+							snacks.get(itemLocation).setStockAmount(snacks.get(itemLocation).getStockAmount() - 1);
 
 							// Product Purchase Log
+
+
+
 						}
+
+						} else if (nextChoice.equals(PURCHASE_MENU_OPTION_FINISH_TRANSACTION)) {
+						int exactChange = currentBalance.multiply(new BigDecimal("100")).intValue();
+
+						int quarters = 0;
+						int quarterWorth = 25;
+
+						int dimes = 0;
+						int dimeWorth = 10;
+
+						int nickels = 0;
+						int nickelWorth = 5;
+
+						// calculate amount of coins
+						while (exactChange > 0) {
+							quarters = exactChange / quarterWorth;
+							exactChange -= quarters * quarterWorth;
+
+							dimes = exactChange / dimeWorth;
+							exactChange -= dimes * dimeWorth;
+
+							nickels = exactChange / nickelWorth;
+							exactChange -= nickels * nickelWorth;
+
+							System.out.println("Your change is " + quarters + " Quarters " + dimes + " Dimes " + nickels + " Nickels!");
+						}
+						BigDecimal changeGiven = new BigDecimal(0.00);
+
+						changeGiven = currentBalance.subtract(currentBalance);
+						menu.getChoiceFromOptions(MAIN_MENU_OPTIONS);
+
+					} if (choice.equals(MAIN_MENU_OPTION_EXIT)) {
+						end = true;
 					}
 				}
+
 			}
 		}
 	}
@@ -106,6 +157,7 @@ public class VendingMachineCLI {
 
 		Goodies goods = new Goodies();
 		cli.snacks = goods.snacks();
+
 		cli.run();
 	}
 }

@@ -24,7 +24,7 @@ public class Goodies {
                 String lineOfInput = productChoice.nextLine();
                 String[] term = lineOfInput.split("\\|");
 
-                if (term[3].equals("Chips")) {
+                if (term[3].equals("Chip")) {
                     Chips chip = new Chips(term[0], term[1], term[3], 5, new BigDecimal(term[2]));
                     items.put(term[0], chip);
                 } else if (term[3].equals("Candy")) {
