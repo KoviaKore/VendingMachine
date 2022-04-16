@@ -20,17 +20,21 @@ public class VendingMachineCLI {
 	private static final String MAIN_MENU_OPTION_PURCHASE = "Purchase";
 	private static final String MAIN_MENU_OPTION_EXIT = "Exit";
 	private static final String[] MAIN_MENU_OPTIONS = {MAIN_MENU_OPTION_DISPLAY_ITEMS, MAIN_MENU_OPTION_PURCHASE,
-			MAIN_MENU_OPTION_EXIT };
+			MAIN_MENU_OPTION_EXIT};
 
 	private static final String PURCHASE_MENU_OPTION_FEED_MONEY = "Feed Money";
 	private static final String PURCHASE_MENU_SELECT_PRODUCT = "Select Product";
 	private static final String PURCHASE_MENU_OPTION_FINISH_TRANSACTION = "Finish Transaction";
-	private static final String[] PURCHASE_MENU_OPTIONS = { PURCHASE_MENU_OPTION_FEED_MONEY, PURCHASE_MENU_SELECT_PRODUCT,
+	private static final String[] PURCHASE_MENU_OPTIONS = {PURCHASE_MENU_OPTION_FEED_MONEY, PURCHASE_MENU_SELECT_PRODUCT,
 			PURCHASE_MENU_OPTION_FINISH_TRANSACTION};
 
 	private Menu menu;
 	private Map<String, VendingItems> snacks;
 	private BigDecimal currentBalance = new BigDecimal("0.00");
+	private BigDecimal totalFeed = new BigDecimal("0.00");
+	private BigDecimal changeGiven = new BigDecimal("0.00");
+	private File log = new File("Log.txt");
+	private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/uuuu HH:mm:ss a");
 
 
 	public VendingMachineCLI(Menu menu) {
@@ -41,22 +45,20 @@ public class VendingMachineCLI {
 		System.out.println(VENDING_MACHINE_STORE_NAME);
 
 
-
-
 		while (true) {
 			String choice = (String) menu.getChoiceFromOptions(MAIN_MENU_OPTIONS);
 
 
 			if (choice.equals(MAIN_MENU_OPTION_DISPLAY_ITEMS)) {
 				// display vending machine items
-				for(VendingItems products : snacks.values()) {
+				for (VendingItems products : snacks.values()) {
 					System.out.println(products);
 				}
 			} else if (choice.equals(MAIN_MENU_OPTION_PURCHASE)) {
 
 				// do purchase
 
-				while(true) {
+				while (true) {
 					System.out.println("\n" + "Current balance: $" + currentBalance);
 					String nextChoice = (String) menu.getChoiceFromOptions(PURCHASE_MENU_OPTIONS);
 
@@ -69,13 +71,14 @@ public class VendingMachineCLI {
 						String dollars = money.nextLine();
 						// Using big decimal because it's more precise when dealing with money compared to a standard double
 						BigDecimal moneyFeed = new BigDecimal(dollars);
-						currentBalance = currentBalance.add(moneyFeed);
+						totalFeed = totalFeed.add(moneyFeed);
 
 						//Feed money Logs
-						try(FileWriter VendingLogs = new FileWriter("Vending Log.txt")) {
-							DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-uuuu HH:mm:ss a");
-							VendingLogs.write(String.valueOf(LocalDateTime.now().format(formatter) + " FEED MONEY:" + moneyFeed + currentBalance));
-						} catch(IOException e) {
+
+						try (PrintWriter vendingLogs = new PrintWriter(new FileOutputStream(log, true))) {
+							DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/uuuu HH:mm:ss a");
+							vendingLogs.println(LocalDateTime.now().format(formatter) + " FEED MONEY: $" + dollars + ".00 $" + totalFeed);
+						} catch (IOException e) {
 							System.err.println("File not found");
 						}
 
@@ -95,22 +98,28 @@ public class VendingMachineCLI {
 							System.out.println("Invalid Item Number");
 						} else if (snacks.get(itemLocation).getStockAmount() == 0) {
 							System.out.println("You've Selected A Sold Out Item");
-						} else if (currentBalance.compareTo(snacks.get(itemLocation).getPrice()) == -1) {
+						} else if (totalFeed.compareTo(snacks.get(itemLocation).getPrice()) == -1) {
 							System.out.println("\n" + "Insufficient Funds For Purchase");
 
 							// If no exceptions and users enter and chooses correctly
 						} else {
 							System.out.println(snacks.get(itemLocation).getItemName() + " S" + snacks.get(itemLocation).getPrice());
-							currentBalance = currentBalance.subtract(snacks.get(itemLocation).getPrice());
+							currentBalance = totalFeed.subtract(snacks.get(itemLocation).getPrice());
 
 							System.out.println(snacks.get(itemLocation).dispenseMessage());
 							snacks.get(itemLocation).setStockAmount(snacks.get(itemLocation).getStockAmount() - 1);
 
 							// Product Purchase Log
+							try (PrintWriter vendingLogs = new PrintWriter(new FileOutputStream(log, true))) {
+								vendingLogs.println(LocalDateTime.now().format(formatter) + " " + snacks.get(itemLocation).getItemName()
+										+ " " + snacks.get(itemLocation).getItemNumber() + " $" + totalFeed + " $" + currentBalance);
+							} catch (FileNotFoundException e) {
+								System.out.println("File not Found");
+							}
 
 						}
 
-						} else if (nextChoice.equals(PURCHASE_MENU_OPTION_FINISH_TRANSACTION)) {
+					} else if (nextChoice.equals(PURCHASE_MENU_OPTION_FINISH_TRANSACTION)) {
 						int exactChange = currentBalance.multiply(new BigDecimal("100")).intValue();
 
 						int quarters = 0;
@@ -133,20 +142,37 @@ public class VendingMachineCLI {
 							nickels = exactChange / nickelWorth;
 							exactChange -= nickels * nickelWorth;
 
-							System.out.println("Your change is " + quarters + " Quarters " + dimes + " Dimes " + nickels + " Nickels!");
+							changeGiven = currentBalance;
+
+							System.out.println("Your change is $" + changeGiven + "\n" + "That's " + quarters + " Quarters " + dimes + " Dimes " +
+									nickels + " Nickels!");
 						}
-						BigDecimal changeGiven = new BigDecimal(0.00);
 
-						changeGiven = currentBalance.subtract(currentBalance);
+						changeGiven = currentBalance;
+
+						currentBalance = currentBalance.subtract(currentBalance);
+						System.out.println("\n" + "Current balance: $" + currentBalance);
+
+						// give change logs
+						try (PrintWriter vendingLogs = new PrintWriter(new FileOutputStream(log, true))) {
+							vendingLogs.println(LocalDateTime.now().format(formatter) + " GIVE CHANGE $" + changeGiven + " $" + currentBalance);
+						} catch (FileNotFoundException e) {
+							System.out.println("File not Found");
+						}
+
+
+						// return to main menu so that we can exit the program
 						menu.getChoiceFromOptions(MAIN_MENU_OPTIONS);
-
-					} if (choice.equals(MAIN_MENU_OPTION_EXIT)) {
 					}
 				}
 
+			} else if (choice.equals(MAIN_MENU_OPTION_EXIT)) {
+				break;
 			}
-		}
-	}
+		} System.exit(0);
+
+
+}
 
 	public static void main(String[] args) {
 		Menu menu = new Menu(System.in, System.out);
