@@ -32,6 +32,7 @@ public class VendingMachineCLI {
 	private Map<String, VendingItems> snacks;
 	private BigDecimal currentBalance = new BigDecimal("0.00");
 	private BigDecimal totalFeed = new BigDecimal("0.00");
+	private BigDecimal productBalance = new BigDecimal("0.00");
 	private BigDecimal changeGiven = new BigDecimal("0.00");
 	private File log = new File("Log.txt");
 	private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/uuuu hh:mm:ss a");
@@ -59,8 +60,8 @@ public class VendingMachineCLI {
 				// do purchase
 
 				while (true) {
-				System.out.println("\n" + "Current balance: $" + currentBalance);
-				String nextChoice = (String) menu.getChoiceFromOptions(PURCHASE_MENU_OPTIONS);
+					System.out.println("\n" + "Current balance: $" + currentBalance);
+				    String nextChoice = (String) menu.getChoiceFromOptions(PURCHASE_MENU_OPTIONS);
 
 				//Feed money process
 				if (nextChoice.equals(PURCHASE_MENU_OPTION_FEED_MONEY)) {
@@ -71,12 +72,13 @@ public class VendingMachineCLI {
 					String dollars = money.nextLine();
 					// Using big decimal because it's more precise when dealing with money compared to a standard double
 					BigDecimal moneyFeed = new BigDecimal(dollars);
-					totalFeed = totalFeed.add(moneyFeed);
+					currentBalance = currentBalance.add(moneyFeed);
+
 
 					//Feed money Logs
 
 					try (PrintWriter vendingLogs = new PrintWriter(new FileOutputStream(log, true))) {
-						vendingLogs.println(LocalDateTime.now().format(formatter) + " FEED MONEY: $" + dollars + ".00 $" + totalFeed);
+						vendingLogs.println(LocalDateTime.now().format(formatter) + " FEED MONEY: $" + dollars + ".00 $" + currentBalance);
 					} catch (FileNotFoundException e) {
 						System.err.println("File not found");
 					}
@@ -97,14 +99,13 @@ public class VendingMachineCLI {
 						System.out.println("Oh No! Invalid Item Number");
 					} else if (snacks.get(itemLocation).getStockAmount() == 0) {
 						System.out.println("Sorry! You've Selected A Sold Out Item");
-					} else if (totalFeed.compareTo(snacks.get(itemLocation).getPrice()) == -1) {
+					} else if (currentBalance.compareTo(snacks.get(itemLocation).getPrice()) == -1) {
 						System.out.println("\n" + "Oops! Insufficient Funds For Purchase");
 
 						// If no exceptions and users enter and chooses correctly
 					} else {
 						System.out.println(snacks.get(itemLocation).getItemName() + " $" + snacks.get(itemLocation).getPrice());
-						currentBalance = totalFeed.subtract(snacks.get(itemLocation).getPrice());
-
+						currentBalance = currentBalance.subtract(snacks.get(itemLocation).getPrice());
 
 						// Dispenses specific snack message
 						System.out.println(snacks.get(itemLocation).dispenseMessage());
@@ -114,7 +115,8 @@ public class VendingMachineCLI {
 						// Product Purchase Log
 						try (PrintWriter vendingLogs = new PrintWriter(new FileOutputStream(log, true))) {
 							vendingLogs.println(LocalDateTime.now().format(formatter) + " " + snacks.get(itemLocation).getItemName()
-									+ " " + snacks.get(itemLocation).getItemNumber() + " $" + totalFeed + " $" + currentBalance);
+									+ " " + snacks.get(itemLocation).getItemNumber() + " $" + snacks.get(itemLocation).getPrice() +
+									" $" + currentBalance);
 						} catch (FileNotFoundException e) {
 							System.out.println("File not Found");
 						}
@@ -147,9 +149,9 @@ public class VendingMachineCLI {
 						changeGiven = currentBalance;
 
 						System.out.println("Your change is $" + changeGiven + "\n" + "That's " + quarters + " Quarters " + dimes + " Dimes " +
-								nickels + " Nickels!" + "\n" + "* Let this snack calm your mind! *" + "\n" +
+								nickels + " Nickels!" + "\n" + "\n" + "* Let this snack calm your mind! *" + "\n" +
 								"  *** And soothe your soul! ***  " +
-								"\n" + "  * Thank you for VIBIN with us! *  ");
+								"\n" + "  * Thank you for VIBING with us! *  ");
 					}
 
 					//changeGiven = currentBalance;
