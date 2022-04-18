@@ -31,8 +31,8 @@ public class VendingMachineCLI {
 	private Menu menu;
 	private Map<String, VendingItems> snacks;
 	private BigDecimal currentBalance = new BigDecimal("0.00");
-	private BigDecimal totalFeed = new BigDecimal("0.00");
-	private BigDecimal productBalance = new BigDecimal("0.00");
+	//private BigDecimal totalFeed = new BigDecimal("0.00");
+	//private BigDecimal productBalance = new BigDecimal("0.00");
 	private BigDecimal changeGiven = new BigDecimal("0.00");
 	private File log = new File("Log.txt");
 	private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/uuuu hh:mm:ss a");
@@ -168,7 +168,6 @@ public class VendingMachineCLI {
 
 
 					// return to main menu so that we can exit the program
-					//menu.getChoiceFromOptions(MAIN_MENU_OPTIONS);
 					run();
 				   }
 				}
